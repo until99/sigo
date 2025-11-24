@@ -28,7 +28,7 @@ resource "google_service_account" "composer_sa" {
   display_name = "Service Account para o Composer Environment"
 }
 
-# Identidade do Agente de Serviço do Composer (O "Robô" do Google)
+# Identidade do Agente de Serviço do Composer
 resource "google_project_service_identity" "composer_agent" {
   provider = google-beta
   project  = "ghm-data-dev"
@@ -52,7 +52,7 @@ resource "google_service_account_iam_member" "composer_agent_auth" {
   member             = "serviceAccount:${google_project_service_identity.composer_agent.email}"
 }
 
-# --- 3. Bucket de Armazenamento (Necessário criar antes) ---
+# --- 3. Bucket de Armazenamento ---
 
 resource "google_storage_bucket" "composer_bucket" {
   name                        = "ghm-data-dev-composer-bucket-001"
@@ -63,8 +63,8 @@ resource "google_storage_bucket" "composer_bucket" {
 
 # --- 4. O Ambiente Cloud Composer 3 ---
 
-resource "google_composer_environment" "meu_composer" {
-  name    = "meu-ambiente-composer-3"
+resource "google_composer_environment" "airflow_composer_3" {
+  name    = "ghm-composer-env-3"
   region  = "us-central1"
   project = "ghm-data-dev"
 
@@ -81,7 +81,6 @@ resource "google_composer_environment" "meu_composer" {
       service_account = google_service_account.composer_sa.email
     }
 
-    # Configuração ajustada para 2GB (requisito do Composer 3)
     workloads_config {
       scheduler {
         cpu        = 0.5

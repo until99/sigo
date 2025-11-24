@@ -514,9 +514,9 @@
 - path: /v1/pipelines/:dagId/runs
   method: POST
   schema: Pipeline
-  summary: Search pipeline run history (Complex Filter)
+  summary: Search pipeline run history
     
-  payload:
+  queryParams:
     limit: <Integer>
     offset: <Integer>
     startedDateGt: <DateTime>
