@@ -1,0 +1,732 @@
+# -----------------------------------------------------------------------------
+# AUTHENTICATION
+# -----------------------------------------------------------------------------
+- path: /v1/auth/login
+  method: POST
+  schema: Auth
+  summary: Authenticate user and generate JWT Token
+  
+  payload:
+    email: <String>
+    password: <String>
+
+  responses:
+    200:
+      accessToken: <String>
+      refreshToken: <String>
+      expiresIn: <Integer>
+      tokenType: "Bearer"
+      user:
+        userId: <String>
+        userName: <String>
+        email: <String>
+        role: <String>
+
+    401:
+      message: "Invalid credentials"
+    500:
+      message: "Error between communication..."
+
+- path: /v1/auth/refresh
+  method: POST
+  schema: Auth
+  summary: Refresh expired Access Token using Refresh Token
+
+  payload:
+    refreshToken: <String>
+
+  responses:
+    200:
+      accessToken: <String>
+      expiresIn: <Integer>
+    
+    401:
+      message: "Invalid or expired refresh token"
+    500:
+      message: "Error between communication..."
+
+- path: /v1/auth/logout
+  method: POST
+  schema: Auth
+  summary: Invalidate the user session (optional blacklist logic)
+
+  payload:
+    refreshToken: <String>
+
+  responses:
+    200:
+      message: "Logged out successfully"
+    500:
+      message: "Error between communication..."
+
+# -----------------------------------------------------------------------------
+# DASHBOARDS
+# -----------------------------------------------------------------------------
+- path: /v1/powerbi/dashboards
+  method: GET
+  schema: Dashboard
+  summary: Retrieve all dashboards
+  
+  responses:
+    200:
+      body:
+        dashboards[]:
+          - dashboardId: <String>
+            dashboardName: <String>
+            workspaceId: <String>
+            workspaceName: <String>
+            groupId: <String>
+            groupName: <String>
+            groupDescription: <String>
+            backgroundImage: <Url>
+            pipelineId: <String>
+            createdAt: <DateTime>
+            
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+
+- path: /v1/powerbi/workspace/:workspaceId/dashboard/:dashboardId
+  method: GET
+  schema: Dashboard
+  summary: Retrieve specific dashboard within a workspace
+
+  responses:
+    200:
+      body:
+        dashboardId: <String>
+        dashboardName: <String>
+        workspaceId: <String>
+        workspaceName: <String>
+        groupId: <String>
+        groupName: <String>
+        backgroundImage: <Url>
+        pipelineId: <String>
+        createdAt: <DateTime>
+                
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..." 
+ 
+- path: /v1/powerbi/dashboard/:dashboardId
+  method: DELETE
+  schema: Dashboard
+  summary: Delete a dashboard
+  
+  payload:
+    workspaceId: <String>
+  
+  responses:
+    200:
+      message: "Dashboard deleted successfully"
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+
+- path: /v1/powerbi/dashboards/group/:groupId
+  method: GET
+  schema: Dashboard
+  summary: Retrieve all dashboards within a specific group
+  
+  responses:
+    200:
+      body:
+        dashboards[]:
+          - dashboardId: <String>
+            dashboardName: <String>
+            workspaceId: <String>
+            workspaceName: <String>
+            backgroundImage: <Url>
+            pipelineId: <String>
+            createdAt: <DateTime>
+            
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+
+- path: /v1/powerbi/dashboard/refresh
+  method: POST
+  schema: Dashboard
+  summary: Trigger a refresh for a dashboard
+
+  payload:
+    workspaceId: <String>
+    dashboardId: <String>
+
+  responses:
+    200:
+      message: "Refresh started successfully"
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+          
+- path: /v1/powerbi/dashboard/refresh-status
+  method: GET
+  schema: Dashboard
+  summary: Retrieve remaining refresh count and status
+
+  responses:
+    200:
+      remainRefreshCount: <Integer>
+      lastUpdatedAt: <DateTime>
+                
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+
+# -----------------------------------------------------------------------------
+# GROUPS
+# -----------------------------------------------------------------------------
+- path: /v1/group
+  method: GET
+  schema: Group
+  summary: Retrieve all groups
+
+  responses:
+    200:
+      groups[]:
+        - groupId: <String>
+          groupName: <String>
+          groupDescription: <String>
+          backgroundImage: <Url>
+          lastUpdatedAt: <DateTime>
+          createdAt: <DateTime>
+
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+
+- path: /v1/group/:groupId
+  method: GET
+  schema: Group
+  summary: Retrieve specific group details
+  
+  responses:
+    200:
+      groupName: <String>
+      groupDescription: <String>
+      backgroundImage: <Url>
+      lastUpdatedAt: <DateTime>
+      createdAt: <DateTime>
+
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+    
+- path: /v1/group
+  method: POST
+  schema: Group
+  summary: Create a new group
+
+  payload:
+    groupName: <String>
+    groupDescription: <String>
+    backgroundImage: <Url>
+
+  responses:
+    200:
+      message: "Group created successfully"
+      groupId: <String>
+
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+
+- path: /v1/group/:groupId
+  method: DELETE
+  schema: Group
+  summary: Delete a group
+      
+  responses:
+    200:
+      message: "Group deleted successfully"
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+    
+- path: /v1/group/:groupId
+  method: PATCH
+  schema: Group
+  summary: Update a group
+
+  payload:
+    groupName: <String>
+    groupDescription: <String>
+    backgroundImage: <Url>
+      
+  responses:
+    200:
+      message: "Group updated successfully"
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+
+# -----------------------------------------------------------------------------
+# USERS
+# -----------------------------------------------------------------------------
+- path: /v1/user
+  method: GET
+  schema: User
+  summary: Retrieve all users
+
+  responses:
+    200:
+      users[]:
+        - userId: <String>
+          userName: <String>
+          email: <String>
+          userBusinessArea: <String>
+          userProfilePicture: <Url>
+          lastUpdatedAt: <DateTime>
+          createdAt: <DateTime>
+
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+
+- path: /v1/user
+  method: POST
+  schema: User
+  summary: Create user (Register)
+    
+  payload:
+    email: <String>
+    password: <String>
+    userName: <String>
+    userBusinessArea: <String>
+    userProfilePicture: <Url>
+
+  responses:
+    200:
+      message: "User created successfully"
+      userId: <String>
+
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+
+- path: /v1/user/:userId
+  method: GET
+  schema: User
+  summary: Retrieve specific user details
+
+  responses:
+    200:
+      userId: <String>
+      userName: <String>
+      email: <String>
+      userBusinessArea: <String>
+      userProfilePicture: <Url>
+      lastUpdatedAt: <DateTime>
+      createdAt: <DateTime>
+
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+          
+- path: /v1/user/:userId
+  method: PATCH
+  schema: User
+  summary: Update user details
+
+  payload:
+    userName: <String>
+    userBusinessArea: <String>
+    userProfilePicture: <Url>
+    # Senha geralmente é alterada em rota separada por segurança
+
+  responses:
+    200:
+      message: "User updated successfully"
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+          
+- path: /v1/user/:userId
+  method: DELETE
+  schema: User
+  summary: Delete user
+
+  responses:
+    200:
+      message: "User deleted successfully"
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+
+# RELATIONS (User <-> Groups/Dashboards)
+- path: /v1/user/:userId/groups
+  method: GET
+  schema: User
+  summary: Retrieves groups to which the user belongs
+
+  responses:
+    200:
+      groups[]:
+        - groupId: <String>
+          groupName: <String>
+          groupDescription: <String>
+          lastUpdatedAt: <DateTime>
+          createdAt: <DateTime>
+
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+
+- path: /v1/user/:userId/dashboards
+  method: GET
+  schema: User
+  summary: Retrieves dashboards to which the user has access
+
+  responses:
+    200:
+      dashboards[]:
+        - dashboardId: <String>
+          dashboardName: <String>
+          workspaceId: <String>
+          workspaceName: <String>
+          groupId: <String>
+          groupName: <String>
+          groupDescription: <String>
+          backgroundImage: <Url>
+          pipelineId: <String>
+          createdAt: <DateTime>
+
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+
+- path: /v1/user/:userId/groups
+  method: POST
+  schema: User
+  summary: Add user to a group (Association)
+
+  payload:
+    groupId: <String>
+
+  responses:
+    200:
+      message: "User added to group successfully"
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+      
+- path: /v1/user/:userId/groups/:groupId
+  method: DELETE
+  schema: User
+  summary: Remove user from a group (Association)
+
+  responses:
+    200:
+      message: "User removed from group successfully"
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+# -----------------------------------------------------------------------------
+# PIPELINES (Airflow / DAGs)
+# -----------------------------------------------------------------------------
+- path: /v1/pipelines
+  method: GET
+  schema: Pipeline
+  summary: Retrieve all pipelines
+
+  responses:
+    200:
+      pipelines[]:
+        - pipelineId: <String>
+          pipelineName: <String>
+          nextDagRun: <DateTime>
+          isPaused: <Bool>
+          description: <String>
+          fileLoc: <String>
+          tags[]:
+            - name: <String>
+          owners[]:
+            - name: <String>
+          hasImportErrors: <Bool>
+          lastUpdatedAt: <DateTime>
+          createdAt: <DateTime>
+
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+
+- path: /v1/pipelines/:dagId
+  method: GET
+  schema: Pipeline
+  summary: Retrieve specific pipeline details
+
+  responses:
+    200:
+      pipelineId: <String>
+      pipelineName: <String>
+      nextDagRun: <DateTime>
+      isPaused: <Bool>
+      description: <String>
+      fileLoc: <String>
+      tags[]:
+        - name: <String>
+      owners[]:
+        - name: <String>
+      hasImportErrors: <Bool>
+      lastUpdatedAt: <DateTime>
+      createdAt: <DateTime>
+
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+
+- path: /v1/pipelines/:dagId
+  method: DELETE
+  schema: Pipeline
+  summary: Delete pipeline
+
+  responses:
+    200:
+      message: "Pipeline deleted successfully"
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+
+- path: /v1/pipelines/:dagId/runs
+  method: POST
+  schema: Pipeline
+  summary: Search pipeline run history (Complex Filter)
+    
+  payload:
+    limit: <Integer>
+    offset: <Integer>
+    startedDateGt: <DateTime>
+    startedDateGte: <DateTime>
+    finishDateLt: <DateTime>
+    finishDateLte: <DateTime>
+    runType[]: <String>
+    state[]: <String>
+    triggeredBy: <String>
+
+  responses:
+    200:
+      pipelineRuns[]:
+        - dagRunId: <String>
+          queuedAt: <DateTime>
+          startedAt: <DateTime>
+          finishAt: <DateTime>
+          duration: <Integer>
+          runType: <String>
+          note: <String>
+          triggeredBy: <String>
+          triggeringUsername: <String>
+          state: <String>
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."  
+
+- path: /v1/pipelines/:dagId/trigger
+  method: POST
+  schema: Pipeline
+  summary: Trigger a new pipeline run
+    
+  payload:
+    triggerAt: <DateTime>
+    note: <String>
+    conf: <JSON>
+
+  responses:
+    200:
+      message: "Pipeline triggered successfully"
+      dagRunId: <String>
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..." 
+          
+- path: /v1/pipelines/attach
+  method: POST
+  schema: Pipeline
+  summary: Attach pipeline to a dashboard (Association)
+    
+  payload:
+    pipelineId: <String>
+    dashboardId: <String>
+
+  responses:
+    200:
+      message: "Pipeline attached successfully"
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."     
+
+- path: /v1/pipelines/detach
+  method: POST
+  schema: Pipeline
+  summary: Detach pipeline from a dashboard
+    
+  payload:
+    pipelineId: <String>
+    dashboardId: <String>
+
+  responses:
+    200:
+      message: "Pipeline detached successfully"
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."     
+
+# -----------------------------------------------------------------------------
+# CLOUD COMPOSER (INFRA)
+# -----------------------------------------------------------------------------
+- path: /v1/composer/restart
+  method: POST
+  schema: Composer
+  summary: Restart the composer environment
+    
+  payload:
+    environmentName: <String>
+    location: <String>
+
+  responses:
+    200:
+      message: "Composer restart initiated successfully"
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."     
+
+- path: /v1/composer/stop
+  method: POST
+  schema: Composer
+  summary: Stop the composer environment
+    
+  payload:
+    environmentName: <String>
+    location: <String>
+
+  responses:
+    200:
+      message: "Composer stop initiated successfully"
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."     
+
+- path: /v1/composer/start
+  method: POST
+  schema: Composer
+  summary: Start the composer environment
+    
+  payload:
+    environmentName: <String>
+    location: <String>
+
+  responses:
+    200:
+      message: "Composer start initiated successfully"
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+
+- path: /v1/composer/health
+  method: GET
+  schema: Composer
+  summary: Check the composer health status
+    
+  responses:
+    200:
+      status: <String>
+      details: <JSON>
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."     
+
+# -----------------------------------------------------------------------------
+# POWERBI EMBEDDED (INFRA)
+# -----------------------------------------------------------------------------
+- path: /v1/embedded/restart
+  method: POST
+  schema: Embedded
+  summary: Restart PowerBI embedded capacity
+    
+  payload:
+    capacityId: <String>
+
+  responses:
+    200:
+      message: "Embedded restart initiated successfully"
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+
+- path: /v1/embedded/stop
+  method: POST
+  schema: Embedded
+  summary: Stop PowerBI embedded capacity
+    
+  payload:
+    capacityId: <String>
+
+  responses:
+    200:
+      message: "Embedded stop initiated successfully"
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+
+- path: /v1/embedded/start
+  method: POST
+  schema: Embedded
+  summary: Start PowerBI embedded capacity
+    
+  payload:
+    capacityId: <String>
+
+  responses:
+    200:
+      message: "Embedded start initiated successfully"
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
+
+- path: /v1/embedded/health
+  method: GET
+  schema: Embedded
+  summary: Check PowerBI embedded health
+    
+  responses:
+    200:
+      status: <String>
+      loadPercentage: <Float>
+    400:
+      message: "The request does not reach the goal..."
+    500:
+      message: "Error between communication..."
