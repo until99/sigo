@@ -1,4 +1,5 @@
 """Power BI Service - Integration with Microsoft Power BI REST API"""
+
 import requests
 from typing import Dict, Any, List
 from datetime import datetime, timedelta
@@ -28,14 +29,14 @@ class PowerBIService:
         Raises:
             Exception: If authentication fails
         """
-        # Check if we have a valid cached token
         if self._access_token and self._token_expiry:
             if datetime.now() < self._token_expiry:
                 return self._access_token
 
-        # Get new token
-        token_url = f"https://login.microsoftonline.com/{self.tenant_id}/oauth2/v2.0/token"
-        
+        token_url = (
+            f"https://login.microsoftonline.com/{self.tenant_id}/oauth2/v2.0/token"
+        )
+
         data = {
             "grant_type": "client_credentials",
             "client_id": self.client_id,
@@ -48,7 +49,6 @@ class PowerBIService:
 
         token_data = response.json()
         self._access_token = token_data["access_token"]
-        # Set expiry with 5 minute buffer
         expires_in = token_data.get("expires_in", 3600)
         self._token_expiry = datetime.now() + timedelta(seconds=expires_in - 300)
 

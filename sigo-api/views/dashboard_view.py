@@ -19,16 +19,19 @@ router_dashboard = APIRouter()
 @router_dashboard.get(
     "/powerbi/dashboards",
     response_model=List[DashboardResponse],
-    summary="Retrieve all dashboards",
+    summary="Retrieve all dashboards from local database",
 )
 def get_all_dashboards(db: Session = Depends(get_db)) -> List[DashboardResponse]:
-    """Retrieve all dashboards with group information.
+    """Retrieve all dashboards stored in the local database with group information.
+    
+    This endpoint returns dashboards that have been previously synced from Power BI.
+    To sync new dashboards from Power BI, use the POST /powerbi/sync endpoint first.
 
     Args:
         db: Database session dependency
 
     Returns:
-        List of all dashboards
+        List of all dashboards from local database
 
     Raises:
         HTTPException: If error occurs
@@ -234,10 +237,20 @@ def get_refresh_status(
 
 @router_dashboard.post(
     "/powerbi/sync",
-    summary="Sync dashboards from Power BI",
+    summary="Sync dashboards from Power BI to local database",
 )
 def sync_dashboards(db: Session = Depends(get_db)):
-    """Sync all dashboards from Power BI to local database.
+    """Sync all dashboards from Power BI platform to local database.
+    
+    This endpoint:
+    1. Connects to Power BI using configured credentials
+    2. Retrieves all workspaces and their dashboards
+    3. Inserts new dashboards or updates existing ones in the local database
+    
+    Use this endpoint to:
+    - Initial sync of all Power BI dashboards
+    - Refresh dashboard list when new dashboards are created in Power BI
+    - Update dashboard metadata (names, workspace info, etc.)
 
     Args:
         db: Database session dependency
@@ -246,12 +259,21 @@ def sync_dashboards(db: Session = Depends(get_db)):
         Success message with count of synced dashboards
 
     Raises:
-        HTTPException: If sync fails
+        HTTPException: If sync fails (e.g., invalid credentials, API errors)
     """
     controller = DashboardController()
     dashboards = controller.sync_dashboards_from_powerbi(db)
 
     return {
-        "message": "Dashboards synced successfully",
+        "message": "Dashboards synced successfully from Power BI",
         "count": len(dashboards),
+        "dashboards": [
+            {
+                "dashboardId": d.dashboardId,
+                "dashboardName": d.dashboardName,
+                "workspaceId": d.workspaceId,
+                "workspaceName": d.workspaceName,
+            }
+            for d in dashboards
+        ],
     }
