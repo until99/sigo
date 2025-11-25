@@ -37,6 +37,7 @@ class GroupController:
         db_group = Group(
             groupName=group_data.groupName,
             groupDescription=group_data.groupDescription,
+            backgroundImage=group_data.backgroundImage,
         )
 
         db.add(db_group)
