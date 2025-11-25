@@ -9,7 +9,6 @@ from schemas.group_schema import (
     GroupResponse,
     GroupWithUsersResponse,
     AddUserToGroupRequest,
-    RemoveUserFromGroupRequest,
 )
 from database import get_db
 
@@ -183,11 +182,6 @@ def add_user_to_group(
     request_data: AddUserToGroupRequest,
     db: Session = Depends(get_db),
 ):
-def add_user_to_group(
-    user_id: int,
-    request_data: AddUserToGroupRequest,
-    db: Session = Depends(get_db),
-):
     """Add a user to a group.
 
     Args:
@@ -210,9 +204,7 @@ def add_user_to_group(
     status_code=status.HTTP_200_OK,
     summary="Remove user from group",
 )
-def remove_user_from_group(
-    user_id: int, group_id: int, db: Session = Depends(get_db)
-):
+def remove_user_from_group(user_id: int, group_id: int, db: Session = Depends(get_db)):
     """Remove a user from a group.
 
     Args:
