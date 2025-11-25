@@ -6,6 +6,7 @@ from datetime import datetime
 class GroupBase(BaseModel):
     groupName: str = Field(..., min_length=1, max_length=255)
     groupDescription: Optional[str] = None
+    backgroundImage: Optional[str] = None
 
 
 class GroupCreate(GroupBase):
@@ -15,6 +16,7 @@ class GroupCreate(GroupBase):
 class GroupUpdate(BaseModel):
     groupName: Optional[str] = Field(None, min_length=1, max_length=255)
     groupDescription: Optional[str] = None
+    backgroundImage: Optional[str] = None
 
 
 class GroupResponse(GroupBase):
@@ -43,7 +45,7 @@ class UserInGroupResponse(BaseModel):
 
 
 class AddUserToGroupRequest(BaseModel):
-    userId: int = Field(..., gt=0)
+    groupId: int = Field(..., gt=0)
 
 
 class RemoveUserFromGroupRequest(BaseModel):

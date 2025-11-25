@@ -20,7 +20,7 @@ router_group = APIRouter()
 
 
 @router_group.post(
-    "/groups",
+    "/group",
     response_model=GroupResponse,
     summary="Create a new group",
     status_code=status.HTTP_201_CREATED,
@@ -45,7 +45,7 @@ def create_group(
 
 
 @router_group.get(
-    "/groups/{group_id}",
+    "/group/{group_id}",
     response_model=GroupWithUsersResponse,
     summary="Get group by ID",
 )
@@ -73,7 +73,7 @@ def get_group(group_id: int, db: Session = Depends(get_db)) -> GroupWithUsersRes
 
 
 @router_group.get(
-    "/groups",
+    "/group",
     response_model=List[GroupResponse],
     summary="Get all groups",
 )
@@ -94,8 +94,8 @@ def get_groups(
     return [GroupResponse.from_orm(group) for group in groups]
 
 
-@router_group.put(
-    "/groups/{group_id}",
+@router_group.patch(
+    "/group/{group_id}",
     response_model=GroupResponse,
     summary="Update group",
 )
@@ -126,7 +126,7 @@ def update_group(
 
 
 @router_group.delete(
-    "/groups/{group_id}",
+    "/group/{group_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete group",
 )
@@ -151,61 +151,8 @@ def delete_group(group_id: int, db: Session = Depends(get_db)) -> None:
 # ==================== USER-GROUP RELATIONSHIP ROUTES ====================
 
 
-@router_group.post(
-    "/groups/{group_id}/users",
-    response_model=GroupWithUsersResponse,
-    summary="Add user to group",
-    status_code=status.HTTP_200_OK,
-)
-def add_user_to_group(
-    group_id: int,
-    request_data: AddUserToGroupRequest,
-    db: Session = Depends(get_db),
-) -> GroupWithUsersResponse:
-    """Add a user to a group.
-
-    Args:
-        group_id: Group ID
-        request_data: Request containing user ID
-        db: Database session dependency
-
-    Returns:
-        Updated group data with list of users
-
-    Raises:
-        HTTPException: If group or user not found, or user already in group
-    """
-    group = GroupController.add_user_to_group(db, group_id, request_data.userId)
-    return GroupWithUsersResponse.from_orm(group)
-
-
-@router_group.delete(
-    "/groups/{group_id}/users/{user_id}",
-    response_model=GroupWithUsersResponse,
-    summary="Remove user from group",
-)
-def remove_user_from_group(
-    group_id: int, user_id: int, db: Session = Depends(get_db)
-) -> GroupWithUsersResponse:
-    """Remove a user from a group.
-
-    Args:
-        group_id: Group ID
-        user_id: User ID
-        db: Database session dependency
-
-    Returns:
-        Updated group data with list of users
-
-    Raises:
-        HTTPException: If group or user not found, or user not in group
-    """
-    group = GroupController.remove_user_from_group(db, group_id, user_id)
-    return GroupWithUsersResponse.from_orm(group)
-
-
 @router_group.get(
-    "/users/{user_id}/groups",
+    "/user/{user_id}/groups",
     response_model=List[GroupResponse],
     summary="Get all groups user belongs to",
 )
@@ -224,3 +171,60 @@ def get_user_groups(user_id: int, db: Session = Depends(get_db)) -> List[GroupRe
     """
     groups = GroupController.get_user_groups(db, user_id)
     return [GroupResponse.from_orm(group) for group in groups]
+
+
+@router_group.post(
+    "/user/{user_id}/groups",
+    status_code=status.HTTP_200_OK,
+    summary="Add user to a group",
+)
+def add_user_to_group(
+    user_id: int,
+    request_data: AddUserToGroupRequest,
+    db: Session = Depends(get_db),
+):
+def add_user_to_group(
+    user_id: int,
+    request_data: AddUserToGroupRequest,
+    db: Session = Depends(get_db),
+):
+    """Add a user to a group.
+
+    Args:
+        user_id: User ID
+        request_data: Request containing group ID
+        db: Database session dependency
+
+    Returns:
+        Success message
+
+    Raises:
+        HTTPException: If group or user not found, or user already in group
+    """
+    GroupController.add_user_to_group(db, request_data.groupId, user_id)
+    return {"message": "User added to group successfully"}
+
+
+@router_group.delete(
+    "/user/{user_id}/groups/{group_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Remove user from group",
+)
+def remove_user_from_group(
+    user_id: int, group_id: int, db: Session = Depends(get_db)
+):
+    """Remove a user from a group.
+
+    Args:
+        user_id: User ID
+        group_id: Group ID
+        db: Database session dependency
+
+    Returns:
+        Success message
+
+    Raises:
+        HTTPException: If group or user not found, or user not in group
+    """
+    GroupController.remove_user_from_group(db, group_id, user_id)
+    return {"message": "User removed from group successfully"}

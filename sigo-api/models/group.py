@@ -31,6 +31,7 @@ class Group(Base):
     groupId = Column(Integer, primary_key=True, index=True)
     groupName = Column(String, unique=True, index=True, nullable=False)
     groupDescription = Column(String)
+    backgroundImage = Column(String)
     createdAt = Column(DateTime(timezone=True), server_default=func.now())
     lastUpdatedAt = Column(DateTime(timezone=True), onupdate=func.now())
 
