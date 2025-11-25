@@ -4,6 +4,7 @@ import os
 
 from views.auth_view import router_auth
 from views.user_view import router_user
+from views.group_view import router_group
 from database import engine, Base
 
 
@@ -19,6 +20,7 @@ app = FastAPI(
 
 app.include_router(router_auth, prefix="/v1", tags=["Authentication"])
 app.include_router(router_user, prefix="/v1", tags=["Users"])
+app.include_router(router_group, prefix="/v1", tags=["Groups"])
 
 
 @app.get("/", tags=["Health Check"])

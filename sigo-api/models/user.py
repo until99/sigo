@@ -1,4 +1,5 @@
 from sqlalchemy import Boolean, Column, Integer, String, DateTime
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import bcrypt
 
@@ -18,13 +19,20 @@ class User(Base):
     lastUpdatedAt = Column(DateTime(timezone=True), onupdate=func.now())
     createdAt = Column(DateTime(timezone=True), server_default=func.now())
 
+    # Relationship with groups (many-to-many)
+    groups = relationship("Group", secondary="user_groups", back_populates="users")
+
     def verify_password(self, plain_password: str) -> bool:
         """Verify if the provided password matches the hashed password."""
+        if isinstance(self.hashedPassword, str):
+            hashed_bytes = self.hashedPassword.encode("utf-8")
+        elif isinstance(self.hashedPassword, bytes):
+            hashed_bytes = self.hashedPassword
+        else:
+            return False
         return bcrypt.checkpw(
             plain_password.encode("utf-8"),
-            self.hashedPassword.encode("utf-8")
-            if isinstance(self.hashedPassword, str)
-            else self.hashedPassword,
+            hashed_bytes,
         )
 
     @staticmethod
