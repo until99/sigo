@@ -63,7 +63,11 @@ class DashboardController:
 
             for workspace in workspaces:
                 workspace_id = workspace.get("id")
-                workspace_name = workspace.get("name")
+                workspace_name = workspace.get("name", "")
+
+                # Skip if workspace_id is None
+                if not workspace_id:
+                    continue
 
                 # Get dashboards for this workspace
                 try:
@@ -73,7 +77,7 @@ class DashboardController:
 
                     for pbi_dashboard in powerbi_dashboards:
                         dashboard_id = pbi_dashboard.get("id")
-                        dashboard_name = pbi_dashboard.get("displayName")
+                        dashboard_name = pbi_dashboard.get("displayName", "")
 
                         # Check if dashboard exists in database
                         db_dashboard = (
@@ -84,26 +88,32 @@ class DashboardController:
 
                         if db_dashboard:
                             # Update existing dashboard
-                            db_dashboard.dashboardName = dashboard_name
-                            db_dashboard.workspaceName = workspace_name
-                            db_dashboard.embedUrl = pbi_dashboard.get("embedUrl")
-                            db_dashboard.webUrl = pbi_dashboard.get("webUrl")
+                            db_dashboard.dashboardName = str(dashboard_name)  # type: ignore
+                            db_dashboard.workspaceName = str(workspace_name)  # type: ignore
+                            embed_url = pbi_dashboard.get("embedUrl")
+                            web_url = pbi_dashboard.get("webUrl")
+                            db_dashboard.embedUrl = str(embed_url) if embed_url else None  # type: ignore
+                            db_dashboard.webUrl = str(web_url) if web_url else None  # type: ignore
                         else:
                             # Create new dashboard
+                            embed_url = pbi_dashboard.get("embedUrl")
+                            web_url = pbi_dashboard.get("webUrl")
                             db_dashboard = Dashboard(
                                 dashboardId=dashboard_id,
                                 dashboardName=dashboard_name,
                                 workspaceId=workspace_id,
                                 workspaceName=workspace_name,
-                                embedUrl=pbi_dashboard.get("embedUrl"),
-                                webUrl=pbi_dashboard.get("webUrl"),
+                                embedUrl=str(embed_url) if embed_url else None,
+                                webUrl=str(web_url) if web_url else None,
                             )
                             db.add(db_dashboard)
 
                         synced_dashboards.append(db_dashboard)
 
                 except Exception as e:
-                    print(f"Error syncing dashboards from workspace {workspace_id}: {e}")
+                    print(
+                        f"Error syncing dashboards from workspace {workspace_id}: {e}"
+                    )
                     continue
 
             db.commit()
@@ -229,7 +239,9 @@ class DashboardController:
 
         # Verify group exists if groupId is being updated
         if dashboard_data.groupId is not None:
-            group = db.query(Group).filter(Group.groupId == dashboard_data.groupId).first()
+            group = (
+                db.query(Group).filter(Group.groupId == dashboard_data.groupId).first()
+            )
             if not group:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND, detail="Group not found"
