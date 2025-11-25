@@ -77,7 +77,9 @@ class DashboardController:
 
                     for pbi_dashboard in powerbi_dashboards:
                         dashboard_id = pbi_dashboard.get("id")
-                        dashboard_name = pbi_dashboard.get("displayName", "")
+                        dashboard_name = pbi_dashboard.get("displayName") or ""
+                        embed_url = pbi_dashboard.get("embedUrl")
+                        web_url = pbi_dashboard.get("webUrl")
 
                         # Check if dashboard exists in database
                         db_dashboard = (
@@ -87,24 +89,20 @@ class DashboardController:
                         )
 
                         if db_dashboard:
-                            # Update existing dashboard
-                            db_dashboard.dashboardName = str(dashboard_name)  # type: ignore[assignment]
-                            db_dashboard.workspaceName = str(workspace_name)  # type: ignore[assignment]
-                            embed_url = pbi_dashboard.get("embedUrl")
-                            web_url = pbi_dashboard.get("webUrl")
-                            db_dashboard.embedUrl = str(embed_url) if embed_url else None  # type: ignore[assignment]
-                            db_dashboard.webUrl = str(web_url) if web_url else None  # type: ignore[assignment]
+                            # Update existing dashboard using setattr to avoid type checking issues
+                            setattr(db_dashboard, "dashboardName", dashboard_name)
+                            setattr(db_dashboard, "workspaceName", workspace_name)
+                            setattr(db_dashboard, "embedUrl", embed_url)
+                            setattr(db_dashboard, "webUrl", web_url)
                         else:
                             # Create new dashboard
-                            embed_url = pbi_dashboard.get("embedUrl")
-                            web_url = pbi_dashboard.get("webUrl")
                             db_dashboard = Dashboard(
                                 dashboardId=dashboard_id,
                                 dashboardName=dashboard_name,
                                 workspaceId=workspace_id,
                                 workspaceName=workspace_name,
-                                embedUrl=str(embed_url) if embed_url else None,
-                                webUrl=str(web_url) if web_url else None,
+                                embedUrl=embed_url,
+                                webUrl=web_url,
                             )
                             db.add(db_dashboard)
 
