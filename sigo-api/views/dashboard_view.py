@@ -23,7 +23,7 @@ router_dashboard = APIRouter()
 )
 def get_all_dashboards(db: Session = Depends(get_db)) -> List[DashboardResponse]:
     """Retrieve all dashboards stored in the local database with group information.
-    
+
     This endpoint returns dashboards that have been previously synced from Power BI.
     To sync new dashboards from Power BI, use the POST /powerbi/sync endpoint first.
 
@@ -38,7 +38,7 @@ def get_all_dashboards(db: Session = Depends(get_db)) -> List[DashboardResponse]
     """
     controller = DashboardController()
     dashboards = controller.get_all_dashboards(db)
-    
+
     # Enrich with group information
     response = []
     for dashboard in dashboards:
@@ -49,13 +49,15 @@ def get_all_dashboards(db: Session = Depends(get_db)) -> List[DashboardResponse]
             "workspaceName": dashboard.workspaceName,
             "groupId": dashboard.groupId,
             "groupName": dashboard.group.groupName if dashboard.group else None,
-            "groupDescription": dashboard.group.groupDescription if dashboard.group else None,
+            "groupDescription": dashboard.group.groupDescription
+            if dashboard.group
+            else None,
             "backgroundImage": dashboard.backgroundImage,
             "pipelineId": dashboard.pipelineId,
             "createdAt": dashboard.createdAt,
         }
         response.append(DashboardResponse(**dashboard_dict))
-    
+
     return response
 
 
@@ -95,7 +97,9 @@ def get_dashboard(
         "workspaceName": dashboard.workspaceName,
         "groupId": dashboard.groupId,
         "groupName": dashboard.group.groupName if dashboard.group else None,
-        "groupDescription": dashboard.group.groupDescription if dashboard.group else None,
+        "groupDescription": dashboard.group.groupDescription
+        if dashboard.group
+        else None,
         "backgroundImage": dashboard.backgroundImage,
         "pipelineId": dashboard.pipelineId,
         "createdAt": dashboard.createdAt,
@@ -171,7 +175,9 @@ def get_group_dashboards(
             "workspaceName": dashboard.workspaceName,
             "groupId": dashboard.groupId,
             "groupName": dashboard.group.groupName if dashboard.group else None,
-            "groupDescription": dashboard.group.groupDescription if dashboard.group else None,
+            "groupDescription": dashboard.group.groupDescription
+            if dashboard.group
+            else None,
             "backgroundImage": dashboard.backgroundImage,
             "pipelineId": dashboard.pipelineId,
             "createdAt": dashboard.createdAt,
@@ -198,7 +204,7 @@ def refresh_dashboard(request_data: DashboardRefreshRequest):
         HTTPException: If refresh fails
     """
     controller = DashboardController()
-    
+
     # Note: This requires the dataset ID, which should be obtained from the dashboard
     # For now, we'll use the dashboard_id as dataset_id
     # In production, you should map dashboard to its dataset
@@ -241,12 +247,12 @@ def get_refresh_status(
 )
 def sync_dashboards(db: Session = Depends(get_db)):
     """Sync all dashboards from Power BI platform to local database.
-    
+
     This endpoint:
     1. Connects to Power BI using configured credentials
     2. Retrieves all workspaces and their dashboards
     3. Inserts new dashboards or updates existing ones in the local database
-    
+
     Use this endpoint to:
     - Initial sync of all Power BI dashboards
     - Refresh dashboard list when new dashboards are created in Power BI

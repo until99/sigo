@@ -88,12 +88,12 @@ class DashboardController:
 
                         if db_dashboard:
                             # Update existing dashboard
-                            db_dashboard.dashboardName = str(dashboard_name)  # type: ignore
-                            db_dashboard.workspaceName = str(workspace_name)  # type: ignore
+                            db_dashboard.dashboardName = str(dashboard_name)  # type: ignore[assignment]
+                            db_dashboard.workspaceName = str(workspace_name)  # type: ignore[assignment]
                             embed_url = pbi_dashboard.get("embedUrl")
                             web_url = pbi_dashboard.get("webUrl")
-                            db_dashboard.embedUrl = str(embed_url) if embed_url else None  # type: ignore
-                            db_dashboard.webUrl = str(web_url) if web_url else None  # type: ignore
+                            db_dashboard.embedUrl = str(embed_url) if embed_url else None  # type: ignore[assignment]
+                            db_dashboard.webUrl = str(web_url) if web_url else None  # type: ignore[assignment]
                         else:
                             # Create new dashboard
                             embed_url = pbi_dashboard.get("embedUrl")
