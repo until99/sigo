@@ -39,6 +39,10 @@ jobs:
           cd sigo-api
           uv run coverage run -m pytest
           uv run coverage lcov -o ../reports/lcov.info
+        env:
+          POWERBI_TENANT_ID: test-tenant-id
+          POWERBI_CLIENT_ID: test-client-id
+          POWERBI_CLIENT_SECRET: test-client-secret
 
       - name: Upload coverage to Qlty
         uses: qltysh/qlty-action/coverage@v2
