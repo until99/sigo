@@ -22,17 +22,17 @@ class PowerBIService:
         self.base_url = "https://api.powerbi.com/v1.0/myorg"
 
         # Validate credentials
-        if not self.tenant_id or self.tenant_id == "your-tenant-id-here":
+        if not self.tenant_id:
             raise ValueError(
                 "Power BI TENANT_ID not configured. Please set POWERBI_TENANT_ID in .env file. "
                 "See docs/POWERBI_SETUP.md for setup instructions."
             )
-        if not self.client_id or self.client_id == "your-client-id-here":
+        if not self.client_id:
             raise ValueError(
                 "Power BI CLIENT_ID not configured. Please set POWERBI_CLIENT_ID in .env file. "
                 "See docs/POWERBI_SETUP.md for setup instructions."
             )
-        if not self.client_secret or self.client_secret == "your-client-secret-here":
+        if not self.client_secret:
             raise ValueError(
                 "Power BI CLIENT_SECRET not configured. Please set POWERBI_CLIENT_SECRET in .env file. "
                 "See docs/POWERBI_SETUP.md for setup instructions."
@@ -92,7 +92,7 @@ class PowerBIService:
             List of dashboard dictionaries
         """
         url = f"{self.base_url}/dashboards"
-        response = requests.get(url, headers=self._get_headers())
+        response = requests.get(url, headers=self._get_headers(), timeout=30)
         response.raise_for_status()
         return response.json().get("value", [])
 
@@ -106,7 +106,7 @@ class PowerBIService:
             Dashboard dictionary
         """
         url = f"{self.base_url}/dashboards/{dashboard_id}"
-        response = requests.get(url, headers=self._get_headers())
+        response = requests.get(url, headers=self._get_headers(), timeout=30)
         response.raise_for_status()
         return response.json()
 
@@ -120,7 +120,7 @@ class PowerBIService:
             List of dashboard dictionaries
         """
         url = f"{self.base_url}/groups/{workspace_id}/dashboards"
-        response = requests.get(url, headers=self._get_headers())
+        response = requests.get(url, headers=self._get_headers(), timeout=30)
         response.raise_for_status()
         return response.json().get("value", [])
 
@@ -137,7 +137,7 @@ class PowerBIService:
             Dashboard dictionary
         """
         url = f"{self.base_url}/groups/{workspace_id}/dashboards/{dashboard_id}"
-        response = requests.get(url, headers=self._get_headers())
+        response = requests.get(url, headers=self._get_headers(), timeout=30)
         response.raise_for_status()
         return response.json()
 
@@ -152,7 +152,7 @@ class PowerBIService:
             True if successful
         """
         url = f"{self.base_url}/groups/{workspace_id}/dashboards/{dashboard_id}"
-        response = requests.delete(url, headers=self._get_headers())
+        response = requests.delete(url, headers=self._get_headers(), timeout=30)
         response.raise_for_status()
         return True
 
@@ -163,7 +163,7 @@ class PowerBIService:
             List of workspace dictionaries
         """
         url = f"{self.base_url}/groups"
-        response = requests.get(url, headers=self._get_headers())
+        response = requests.get(url, headers=self._get_headers(), timeout=30)
         response.raise_for_status()
         return response.json().get("value", [])
 
@@ -193,7 +193,7 @@ class PowerBIService:
             True if refresh was triggered
         """
         url = f"{self.base_url}/groups/{workspace_id}/datasets/{dataset_id}/refreshes"
-        response = requests.post(url, headers=self._get_headers(), json={})
+        response = requests.post(url, headers=self._get_headers(), json={}, timeout=30)
         response.raise_for_status()
         return True
 
@@ -210,7 +210,7 @@ class PowerBIService:
             List of refresh history records
         """
         url = f"{self.base_url}/groups/{workspace_id}/datasets/{dataset_id}/refreshes"
-        response = requests.get(url, headers=self._get_headers())
+        response = requests.get(url, headers=self._get_headers(), timeout=30)
         response.raise_for_status()
         return response.json().get("value", [])
 
@@ -225,6 +225,6 @@ class PowerBIService:
             Dataset dictionary
         """
         url = f"{self.base_url}/groups/{workspace_id}/datasets/{dataset_id}"
-        response = requests.get(url, headers=self._get_headers())
+        response = requests.get(url, headers=self._get_headers(), timeout=30)
         response.raise_for_status()
         return response.json()

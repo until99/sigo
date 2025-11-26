@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from typing import Optional
-from datetime import datetime, timedelta
-from jose import JWTError, jwt
+from datetime import datetime, timedelta, timezone
+from jose import jwt
 import os
 
 from models.user import User
@@ -32,7 +32,7 @@ class AuthController:
         if not user:
             return None
 
-        if not user.isActive:
+        if user.isActive is False:
             return None
 
         if not user.verify_password(password):
@@ -56,9 +56,11 @@ class AuthController:
         to_encode = data.copy()
 
         if expires_delta:
-            expire = datetime.utcnow() + expires_delta
+            expire = datetime.now(timezone.utc) + expires_delta
         else:
-            expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+            expire = datetime.now(timezone.utc) + timedelta(
+                minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+            )
 
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
