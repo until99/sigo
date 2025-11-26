@@ -17,6 +17,6 @@ def test_api_docs_accessible(client):
     """Test that API documentation is accessible."""
     response = client.get("/docs")
     assert response.status_code == 200
-    
+
     response = client.get("/openapi.json")
     assert response.status_code == 200

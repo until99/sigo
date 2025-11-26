@@ -36,12 +36,13 @@ def db():
 @pytest.fixture(scope="function")
 def client(db):
     """Create a test client with database override."""
+
     def override_get_db():
         try:
             yield db
         finally:
             pass
-    
+
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as test_client:
         yield test_client
@@ -68,8 +69,7 @@ def test_user(db):
 def auth_headers(client, test_user):
     """Get authentication headers for test user."""
     response = client.post(
-        "/v1/auth/login",
-        json={"email": "test@example.com", "password": "testpass123"}
+        "/v1/auth/login", json={"email": "test@example.com", "password": "testpass123"}
     )
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
