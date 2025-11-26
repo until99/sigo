@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from dotenv import load_dotenv
 import os
+from pathlib import Path
 
 from views.auth_view import router_auth
 from views.user_view import router_user
@@ -8,8 +9,9 @@ from views.group_view import router_group
 from views.dashboard_view import router_dashboard
 from database import engine, Base
 
-
-load_dotenv()
+# Load .env from project root
+env_path = Path(__file__).parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
 Base.metadata.create_all(bind=engine)
 

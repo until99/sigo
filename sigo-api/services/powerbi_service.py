@@ -1,27 +1,45 @@
 """Power BI Service - Integration with Microsoft Power BI REST API"""
 
+import msal
 import requests
 from typing import Dict, Any, List
-from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv()
+# Load .env from project root
+env_path = Path(__file__).parent.parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
 
 class PowerBIService:
-    """Service for interacting with Power BI REST API."""
+    """Service for interacting with Power BI REST API using MSAL authentication."""
 
     def __init__(self):
         self.tenant_id = os.getenv("POWERBI_TENANT_ID")
         self.client_id = os.getenv("POWERBI_CLIENT_ID")
         self.client_secret = os.getenv("POWERBI_CLIENT_SECRET")
         self.base_url = "https://api.powerbi.com/v1.0/myorg"
-        self._access_token = None
-        self._token_expiry = None
+
+        # Validate credentials
+        if not self.tenant_id or self.tenant_id == "your-tenant-id-here":
+            raise ValueError(
+                "Power BI TENANT_ID not configured. Please set POWERBI_TENANT_ID in .env file. "
+                "See docs/POWERBI_SETUP.md for setup instructions."
+            )
+        if not self.client_id or self.client_id == "your-client-id-here":
+            raise ValueError(
+                "Power BI CLIENT_ID not configured. Please set POWERBI_CLIENT_ID in .env file. "
+                "See docs/POWERBI_SETUP.md for setup instructions."
+            )
+        if not self.client_secret or self.client_secret == "your-client-secret-here":
+            raise ValueError(
+                "Power BI CLIENT_SECRET not configured. Please set POWERBI_CLIENT_SECRET in .env file. "
+                "See docs/POWERBI_SETUP.md for setup instructions."
+            )
 
     def _get_access_token(self) -> str:
-        """Get or refresh access token for Power BI API.
+        """Get access token for Power BI API using MSAL.
 
         Returns:
             Access token string
@@ -29,30 +47,35 @@ class PowerBIService:
         Raises:
             Exception: If authentication fails
         """
-        if self._access_token and self._token_expiry:
-            if datetime.now() < self._token_expiry:
-                return self._access_token
-
-        token_url = (
-            f"https://login.microsoftonline.com/{self.tenant_id}/oauth2/v2.0/token"
+        app_msal = msal.ConfidentialClientApplication(
+            client_id=self.client_id,
+            authority=f"https://login.microsoftonline.com/{self.tenant_id}",
+            client_credential=self.client_secret,
         )
 
-        data = {
-            "grant_type": "client_credentials",
-            "client_id": self.client_id,
-            "client_secret": self.client_secret,
-            "scope": "https://analysis.windows.net/powerbi/api/.default",
-        }
+        token_result = app_msal.acquire_token_for_client(
+            scopes=["https://analysis.windows.net/powerbi/api/.default"]
+        )
 
-        response = requests.post(token_url, data=data)
-        response.raise_for_status()
+        if not token_result:
+            raise Exception(
+                "Failed to acquire token from Power BI. "
+                "Please verify your credentials in .env file. "
+                "See docs/POWERBI_SETUP.md for setup instructions."
+            )
 
-        token_data = response.json()
-        self._access_token = token_data["access_token"]
-        expires_in = token_data.get("expires_in", 3600)
-        self._token_expiry = datetime.now() + timedelta(seconds=expires_in - 300)
+        if "access_token" in token_result:
+            return token_result["access_token"]
 
-        return self._access_token
+        # Handle error in token result
+        error_desc = token_result.get(
+            "error_description", token_result.get("error", "Unknown error")
+        )
+        raise Exception(
+            f"Failed to authenticate with Power BI: {error_desc}. "
+            f"Please verify your credentials in .env file. "
+            f"See docs/POWERBI_SETUP.md for setup instructions."
+        )
 
     def _get_headers(self) -> Dict[str, str]:
         """Get headers with authentication token."""

@@ -1,120 +1,172 @@
-# Power BI Integration Setup
+# Power BI Setup Guide
 
-Este documento explica como configurar as credenciais do Power BI para integração com a API SIGO.
+This guide explains how to configure Power BI integration for the SIGO application.
 
-## Pré-requisitos
+## Prerequisites
 
-- Conta Microsoft com acesso ao Power BI
-- Permissões de administrador no Azure AD (para criar app registration)
-- Workspace do Power BI configurado
+- Access to Azure Portal with admin privileges for your tenant
+- Power BI Pro or Premium license
 
-## Passo 1: Criar App Registration no Azure Portal
+## Step 1: Register Application in Azure AD
 
-1. Acesse o [Azure Portal](https://portal.azure.com)
-2. Navegue para **Azure Active Directory** > **App registrations**
-3. Clique em **New registration**
-4. Configure:
-   - **Name**: SIGO Power BI Integration
-   - **Supported account types**: Accounts in this organizational directory only
-   - **Redirect URI**: Deixe em branco por enquanto
-5. Clique em **Register**
+1. Go to [Azure Portal](https://portal.azure.com)
+2. Navigate to **Azure Active Directory** > **App registrations**
+3. Click **New registration**
+4. Configure the application:
+   - **Name**: `SIGO Power BI Integration` (or your preferred name)
+   - **Supported account types**: Select "Accounts in this organizational directory only (Single tenant)"
+   - **Redirect URI**: Leave blank for now
+5. Click **Register**
 
-## Passo 2: Obter Credenciais
+## Step 2: Note Your Credentials
 
-### Tenant ID
-1. Na página Overview do seu App Registration, copie o **Directory (tenant) ID**
-2. Cole no `.env`: `POWERBI_TENANT_ID=seu-tenant-id`
+After registration, you'll see the application overview page. Note down:
 
-### Client ID (Application ID)
-1. Na mesma página Overview, copie o **Application (client) ID**
-2. Cole no `.env`: `POWERBI_CLIENT_ID=seu-client-id`
+- **Application (client) ID**: Copy this value
+- **Directory (tenant) ID**: Copy this value
 
-### Client Secret
-1. No menu lateral, vá em **Certificates & secrets**
-2. Clique em **New client secret**
-3. Adicione uma descrição (ex: "SIGO API Key")
-4. Escolha uma validade (recomendado: 24 months)
-5. Clique em **Add**
-6. **IMPORTANTE**: Copie o **Value** imediatamente (não será mostrado novamente!)
-7. Cole no `.env`: `POWERBI_CLIENT_SECRET=seu-client-secret`
+## Step 3: Create Client Secret
 
-## Passo 3: Configurar Permissões da API
+1. In your app registration, go to **Certificates & secrets**
+2. Click **New client secret**
+3. Add a description (e.g., "SIGO API Secret")
+4. Choose an expiration period (recommended: 24 months)
+5. Click **Add**
+6. **IMPORTANT**: Copy the secret **Value** immediately (you won't be able to see it again)
 
-1. No menu lateral do App Registration, vá em **API permissions**
-2. Clique em **Add a permission**
-3. Selecione **Power BI Service**
-4. Escolha **Application permissions**
-5. Adicione as seguintes permissões:
+## Step 4: Configure API Permissions
+
+1. In your app registration, go to **API permissions**
+2. Click **Add a permission**
+3. Select **Power BI Service**
+4. Choose **Delegated permissions** and add:
    - `Dashboard.Read.All`
-   - `Dashboard.ReadWrite.All`
    - `Dataset.Read.All`
-   - `Dataset.ReadWrite.All`
    - `Workspace.Read.All`
-   - `Workspace.ReadWrite.All`
-6. Clique em **Add permissions**
-7. **IMPORTANTE**: Clique em **Grant admin consent for [sua organização]**
+5. Also add **Application permissions**:
+   - `Dashboard.Read.All`
+   - `Dataset.Read.All`
+   - `Workspace.Read.All`
+   - `Tenant.Read.All` (if you need tenant-wide access)
+6. Click **Add permissions**
 
-## Passo 4: Configurar Power BI Service
+## Step 5: Grant Admin Consent
 
-1. Acesse o [Power BI Admin Portal](https://app.powerbi.com/admin-portal)
-2. Vá em **Tenant settings**
-3. Em **Developer settings**, habilite:
-   - **Service principals can use Power BI APIs**
-   - **Service principals can access read-only admin APIs**
-4. Adicione o Service Principal (seu App Registration) aos grupos permitidos
+**CRITICAL**: Your Azure AD admin must grant consent for these permissions.
 
-## Passo 5: Adicionar Service Principal ao Workspace
+1. In the **API permissions** page, click **Grant admin consent for [Your Tenant]**
+2. Click **Yes** to confirm
+3. Verify all permissions show a green checkmark under "Status"
 
-Para cada workspace que você deseja acessar via API:
+## Step 6: Create Security Group in Azure AD (Required)
 
-1. Abra o workspace no Power BI Service
-2. Clique em **Workspace settings** (ícone de engrenagem)
-3. Vá em **Access**
-4. Clique em **Add people or groups**
-5. Procure pelo nome do seu App Registration (SIGO Power BI Integration)
-6. Atribua a role apropriada (Admin, Member, ou Contributor)
-7. Clique em **Add**
+**IMPORTANT**: Power BI doesn't allow you to add service principals directly. You must add them to an Azure AD Security Group first.
 
-## Passo 6: Testar a Integração
+1. Go to [Azure Portal](https://portal.azure.com)
+2. Navigate to **Azure Active Directory** > **Groups**
+3. Click **New group**
+4. Configure the group:
+   - **Group type**: Security
+   - **Group name**: `powerbi_service` (or your preferred name)
+   - **Group description**: "Security group for Power BI service principals"
+   - **Membership type**: Assigned
+5. Click **Create**
+6. Open the newly created group
+7. Go to **Members** > **Add members**
+8. Search for your application name (e.g., "SIGO Power BI Integration")
+9. Select your service principal and click **Select**
 
-Após configurar todas as credenciais no `.env`, teste a integração:
+## Step 7: Enable Power BI Service Admin Settings
 
-```bash
-# Inicie a API
-uv run ./main.py
+1. Go to [Power BI Admin Portal](https://app.powerbi.com/admin-portal)
+2. Navigate to **Tenant settings**
+3. Scroll to **Developer settings**
+4. Find **Allow service principals to use Power BI APIs**
+5. Enable the toggle
+6. Select **Specific security groups (Recommended)**
+7. In the text box, type and select the security group you created (e.g., `powerbi_service`)
+8. Click **Apply**
 
-# Em outro terminal, teste o endpoint de sync
-curl -X POST http://localhost:8000/v1/powerbi/sync
-```
+**Note**: Changes may take 15-30 minutes to propagate.
 
-Se tudo estiver configurado corretamente, você verá os dashboards sendo sincronizados.
+**Why this is needed**: Power BI admin settings only accept Security Groups, not individual applications. The service principal must be a member of a security group that is then added to the Power BI tenant settings.
 
-## Arquivo .env Exemplo
+## Step 8: Configure Environment Variables
+
+Create or update your `.env` file in the `sigo-api` directory:
 
 ```env
-# Power BI Configurations
-POWERBI_TENANT_ID=12345678-1234-1234-1234-123456789abc
-POWERBI_CLIENT_ID=87654321-4321-4321-4321-987654321xyz
-POWERBI_CLIENT_SECRET=abc123~XYZ789.def456-GHI012
+# Power BI Configuration
+POWERBI_TENANT_ID=your-tenant-id-here
+POWERBI_CLIENT_ID=your-client-id-here
+POWERBI_CLIENT_SECRET=your-client-secret-here
+```
+
+Replace the placeholder values with the actual credentials from Steps 2 and 3.
+
+## Step 9: Test the Connection
+
+Run your API and test the Power BI connection:
+
+```bash
+cd sigo-api
+# Start your API server
+# Make a request to a Power BI endpoint
 ```
 
 ## Troubleshooting
 
-### Erro: "AADSTS700016: Application not found in directory"
-- Verifique se o TENANT_ID e CLIENT_ID estão corretos
-- Certifique-se de que o App Registration não foi deletado
+### Error: Application not found in directory
 
-### Erro: "Insufficient privileges to complete the operation"
-- Verifique se concedeu admin consent para as permissões
-- Certifique-se de que habilitou service principals no Power BI Admin Portal
-- Adicione o service principal ao workspace
+**Problem**: `Application with identifier 'xxx' was not found in the directory 'yyy'`
 
-### Erro: "The refresh operation is not supported for this dataset"
-- Alguns datasets não suportam refresh via API
-- Verifique se o dataset está em um workspace Premium ou Premium Per User
+**Solutions**:
 
-## Documentação Oficial
+- Verify you're using the correct **Tenant ID** from your Azure AD
+- Ensure the **Client ID** matches your app registration
+- Check that you're logged into the correct Azure tenant
 
-- [Power BI REST API](https://learn.microsoft.com/en-us/rest/api/power-bi/)
-- [Service Principal Authentication](https://learn.microsoft.com/en-us/power-bi/developer/embedded/embed-service-principal)
-- [Power BI API Permissions](https://learn.microsoft.com/en-us/power-bi/developer/embedded/embed-service-principal-certificate#step-2---create-an-azure-ad-security-group)
+### Error: Insufficient privileges
+
+**Problem**: `AADSTS65001: The user or administrator has not consented`
+
+**Solutions**:
+
+- Admin consent hasn't been granted (see Step 5)
+- Wait 15-30 minutes after granting consent for changes to propagate
+- Verify the service principal is enabled in Power BI Admin Portal (Step 6)
+
+### Error: Invalid client secret
+
+**Problem**: Authentication fails with "invalid_client"
+
+**Solutions**:
+
+- The client secret may have expired - create a new one
+- Ensure you copied the secret **Value**, not the Secret ID
+- Check for extra spaces or characters when pasting into .env
+
+### Error: AADSTS700016
+
+**Problem**: Application not installed by administrator
+
+**Solutions**:
+
+- Complete Step 5 to grant admin consent
+- Ensure the app registration exists in the correct tenant
+- Verify service principals are enabled in Power BI (Step 6)
+
+## Security Best Practices
+
+1. **Rotate secrets regularly**: Set a calendar reminder to rotate client secrets before expiration
+2. **Use least privilege**: Only grant the minimum required permissions
+3. **Protect .env files**: Never commit `.env` files to version control (add to `.gitignore`)
+4. **Use Azure Key Vault**: For production, consider storing secrets in Azure Key Vault
+5. **Monitor access**: Regularly review application sign-in logs in Azure AD
+
+## Additional Resources
+
+- [Power BI REST API Documentation](https://docs.microsoft.com/en-us/rest/api/power-bi/)
+- [Azure AD App Registration Guide](https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app)
+- [Service Principal with Power BI](https://docs.microsoft.com/en-us/power-bi/developer/embedded/embed-service-principal)
+- [MSAL Python Documentation](https://msal-python.readthedocs.io/)

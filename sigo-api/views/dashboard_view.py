@@ -283,3 +283,50 @@ def sync_dashboards(db: Session = Depends(get_db)):
             for d in dashboards
         ],
     }
+
+
+@router_dashboard.get(
+    "/powerbi/test-connection",
+    summary="Test Power BI API connection and credentials",
+)
+def test_powerbi_connection():
+    """Test connection to Power BI API.
+
+    This endpoint validates your Power BI credentials and API connection.
+    Use this to troubleshoot authentication issues before syncing dashboards.
+
+    Returns:
+        Connection status and any error messages
+
+    Raises:
+        HTTPException: If connection fails
+    """
+    from services.powerbi_service import PowerBIService
+
+    try:
+        service = PowerBIService()
+        # Try to get access token
+        token = service._get_access_token()
+
+        # Try to get workspaces
+        workspaces = service.get_workspaces()
+
+        return {
+            "status": "success",
+            "message": "Successfully connected to Power BI API",
+            "workspaces_count": len(workspaces),
+            "workspaces": [
+                {"id": w.get("id"), "name": w.get("name")}
+                for w in workspaces[:5]  # Show first 5
+            ],
+        }
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to connect to Power BI: {str(e)}",
+        )
