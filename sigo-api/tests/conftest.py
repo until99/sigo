@@ -1,14 +1,18 @@
 """Test fixtures and configuration for pytest."""
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from main import app
 from database import Base, get_db
 from models.user import User
+from views.auth_view import router_auth
+from views.user_view import router_user
+from views.group_view import router_group
+from views.dashboard_view import router_dashboard
 
 # Create in-memory SQLite database for testing
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
@@ -19,6 +23,27 @@ engine = create_engine(
     poolclass=StaticPool,
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+def create_test_app() -> FastAPI:
+    """Create FastAPI app for testing without database initialization."""
+    app = FastAPI(
+        title="SIGO API - Test",
+        description="API for SIGO application - Test Environment",
+        version="1.0.0",
+    )
+
+    app.include_router(router_auth, prefix="/v1", tags=["Authentication"])
+    app.include_router(router_user, prefix="/v1", tags=["Users"])
+    app.include_router(router_group, prefix="/v1", tags=["Groups"])
+    app.include_router(router_dashboard, prefix="/v1", tags=["Dashboards"])
+
+    @app.get("/", tags=["Health Check"])
+    def read_root():
+        """Health check endpoint."""
+        return {"status": "ok", "message": "SIGO API is running"}
+
+    return app
 
 
 @pytest.fixture(scope="function")
@@ -36,6 +61,7 @@ def db():
 @pytest.fixture(scope="function")
 def client(db):
     """Create a test client with database override."""
+    app = create_test_app()
 
     def override_get_db():
         try:
