@@ -305,9 +305,6 @@ def test_powerbi_connection():
 
     try:
         service = PowerBIService()
-        # Try to get access token
-        token = service._get_access_token()
-
         # Try to get workspaces
         workspaces = service.get_workspaces()
 
@@ -316,8 +313,7 @@ def test_powerbi_connection():
             "message": "Successfully connected to Power BI API",
             "workspaces_count": len(workspaces),
             "workspaces": [
-                {"id": w.get("id"), "name": w.get("name")}
-                for w in workspaces[:5]  # Show first 5
+                {"id": w.get("id"), "name": w.get("name")} for w in workspaces
             ],
         }
     except ValueError as e:
