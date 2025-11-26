@@ -30,7 +30,6 @@ jobs:
         run: |
           cd sigo-api
           uv sync
-          uv add --dev pytest pytest-cov
 
       - name: Create reports directory
         run: mkdir -p reports
